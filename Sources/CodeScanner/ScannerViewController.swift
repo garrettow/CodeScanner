@@ -23,7 +23,7 @@ extension CodeScannerView {
         var lastTime = Date(timeIntervalSince1970: 0)
         private let showViewfinder: Bool
         
-        let fallbackVideoCaptureDevice = AVCaptureDevice.default(for: .video)
+        let fallbackVideoCaptureDevice = AVCaptureDevice.zoomedCameraForQRCode(withMinimumCodeSize: 50)
         
         private var isGalleryShowing: Bool = false {
             didSet {
@@ -87,17 +87,18 @@ extension CodeScannerView {
             NSLayoutConstraint.activate([
                 button.heightAnchor.constraint(equalToConstant: 50),
                 stackView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-                stackView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+                stackView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuNSLayoutConstraintide.trailingAnchor),
                 stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
             ])
         }
 
         override public func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
             // Send back their simulated data, as if it was one of the types they were scanning for
-            found(ScanResult(
+         /**   found([NewScanResult](
                 string: parentView.simulatedData,
                 type: parentView.codeTypes.first ?? .qr, image: nil, corners: []
             ))
+          **/
         }
         
         #else
@@ -244,13 +245,13 @@ extension CodeScannerView {
       
         private func setupCaptureDevice() {
             captureSession = AVCaptureSession()
-
+            
             guard let videoCaptureDevice = parentView.videoCaptureDevice ?? fallbackVideoCaptureDevice else {
                 return
             }
 
             let videoInput: AVCaptureDeviceInput
-
+        
             do {
                 videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
             } catch {
@@ -414,7 +415,7 @@ extension CodeScannerView {
             Date().timeIntervalSince(lastTime) <= 0.5
         }
 
-        func found(_ result: ScanResult) {
+        func found(_ result: [NewScanResult]) {
             lastTime = Date()
 
             if parentView.shouldVibrateOnSuccess {
@@ -437,7 +438,21 @@ extension CodeScannerView {
 extension CodeScannerView.ScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
     public func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
 
-
+        var stringValues : Array<NewScanResult> = Array()
+        
+        for x in metadataObjects {
+            guard let readableObject = x as? AVMetadataMachineReadableCodeObject,
+            let stringValue = readableObject.stringValue else {
+                continue
+            }
+            print(readableObject.corners[0].y * 100)
+            
+            stringValues.append(NewScanResult(string: stringValue))
+        }
+        
+        found(stringValues)
+        
+        /**
         guard let metadataObject = metadataObjects.first,
               !parentView.isPaused,
               !didFinishScanning,
@@ -447,7 +462,8 @@ extension CodeScannerView.ScannerViewController: AVCaptureMetadataOutputObjectsD
 
             return
         }
-
+        
+        
         handler = { [self] image in
             let result = ScanResult(string: stringValue, type: readableObject.type, image: image, corners: readableObject.corners)
 
@@ -480,7 +496,7 @@ extension CodeScannerView.ScannerViewController: AVCaptureMetadataOutputObjectsD
                 }
             }
         }
-
+**/
         if parentView.requiresPhotoOutput {
             isCapturing = true
             photoOutput.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
@@ -524,7 +540,8 @@ extension CodeScannerView.ScannerViewController: UIImagePickerControllerDelegate
                     feature.topLeft
                 ]
                 let result = ScanResult(string: qrCodeLink, type: .qr, image: qrcodeImg, corners: corners)
-                found(result)
+                //Edited
+                found([NewScanResult(string: qrCodeLink)])
             }
         }
     }

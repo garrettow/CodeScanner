@@ -43,6 +43,10 @@ public struct ScanResult {
     public let corners: [CGPoint]
 }
 
+public struct NewScanResult {
+    public let string: String
+}
+
 /// The operating mode for CodeScannerView.
 public enum ScanMode {
     /// Scan exactly one code, then stop.
@@ -89,7 +93,7 @@ public struct CodeScannerView: UIViewControllerRepresentable {
     public var isPaused: Bool
     public var isGalleryPresented: Binding<Bool>
     public var videoCaptureDevice: AVCaptureDevice?
-    public var completion: (Result<ScanResult, ScanError>) -> Void
+    public var completion: (Result<[NewScanResult], ScanError>) -> Void
 
     public init(
         codeTypes: [AVMetadataObject.ObjectType],
@@ -97,15 +101,16 @@ public struct CodeScannerView: UIViewControllerRepresentable {
         manualSelect: Bool = false,
         scanInterval: Double = 2.0,
         showViewfinder: Bool = false,
-        requiresPhotoOutput: Bool = true,
+        requiresPhotoOutput: Bool = false,
         simulatedData: String = "",
         shouldVibrateOnSuccess: Bool = true,
         isTorchOn: Bool = false,
         isPaused: Bool = false,
         isGalleryPresented: Binding<Bool> = .constant(false),
-        videoCaptureDevice: AVCaptureDevice? = AVCaptureDevice.bestForVideo,
-        completion: @escaping (Result<ScanResult, ScanError>) -> Void
+        videoCaptureDevice: AVCaptureDevice? = AVCaptureDevice.zoomedCameraForQRCode(withMinimumCodeSize: 20),
+        completion: @escaping (Result<[NewScanResult], ScanError>) -> Void
     ) {
+        print("Init called")
         self.codeTypes = codeTypes
         self.scanMode = scanMode
         self.manualSelect = manualSelect

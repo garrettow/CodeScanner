@@ -19,6 +19,8 @@ extension AVCaptureDevice {
             mediaType: .video,
             position: .back
         ).devices.first ?? AVCaptureDevice.default(for: .video)
+    
+        return captureDevice;
         
         if #available(iOS 15.0, *) {
             captureDevice?.setRecommendedZoomFactor(forMinimumCodeSize: minimumCodeSize)
@@ -53,11 +55,14 @@ extension AVCaptureDevice {
         let zoomFactor = deviceMinimumFocusDistance / minimumSubjectDistanceForCode
         do {
             try lockForConfiguration()
+            print("Before set Zoom Factor", videoZoomFactor, activeFormat.videoFieldOfView)
             videoZoomFactor = CGFloat(zoomFactor)
+            print("After set Zoom Factor", videoZoomFactor, activeFormat.videoFieldOfView)
             unlockForConfiguration()
         } catch {
             print("Could not lock for configuration: \(error)")
         }
+        
     }
     
     private func minimumSubjectDistanceForCode(
